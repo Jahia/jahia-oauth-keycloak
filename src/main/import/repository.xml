@@ -12,6 +12,11 @@
          <templates j:rootTemplatePath="/base" jcr:primaryType="jnt:templatesFolder">
             <files jcr:primaryType="jnt:folder"/>
             <contents jcr:primaryType="jnt:contentFolder"/>
+            <keycloak-oauth-view jcr:primaryType="jnt:contentTemplate">
+               <pagecontent jcr:primaryType="jnt:contentList">
+                  <keycloakoauthview jcr:primaryType="jcauthnt:keycloakOAuthView"/>
+               </pagecontent>
+            </keycloak-oauth-view>
          </templates>
       </jahia-oauth-keycloak>
    </modules>
