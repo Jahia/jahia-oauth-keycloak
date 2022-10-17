@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.http.HttpServletRequest;
 
-@Component(service = {LoginUrlProvider.class})
+@Component(service = LoginUrlProvider.class)
 public class KeycloakLoginUrlProvider implements LoginUrlProvider {
     private static final Logger logger = LoggerFactory.getLogger(KeycloakLoginUrlProvider.class);
 

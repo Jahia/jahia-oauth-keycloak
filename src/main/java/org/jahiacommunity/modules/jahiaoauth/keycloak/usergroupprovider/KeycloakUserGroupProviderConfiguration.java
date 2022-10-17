@@ -19,7 +19,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.Serial;
 import java.util.Dictionary;
 import java.util.Map;
 import java.util.Properties;

@@ -3,6 +3,7 @@ package org.jahiacommunity.modules.jahiaoauth.keycloak.connector;
 import org.apache.commons.lang.StringUtils;
 import org.jahia.bin.Action;
 import org.jahia.bin.ActionResult;
+import org.jahia.bin.Render;
 import org.jahia.modules.jahiaauth.service.SettingsService;
 import org.jahia.modules.jahiaoauth.service.JahiaOAuthService;
 import org.jahia.services.content.JCRSessionWrapper;
@@ -14,7 +15,6 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpMethod;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -45,7 +45,7 @@ public class KeycloakCallbackAction extends Action {
     public void onActivate() {
         setName(NAME);
         setRequireAuthenticatedUser(false);
-        setRequiredMethods(HttpMethod.GET.name());
+        setRequiredMethods(Render.METHOD_GET);
     }
 
     @Override
@@ -65,7 +65,7 @@ public class KeycloakCallbackAction extends Action {
                 if (returnUrl == null || StringUtils.endsWith(returnUrl, "/start")) {
                     returnUrl = renderContext.getSite().getHome().getUrl();
                 }
-                // WARN: site query param is mandatory for the SSOValve in jahia-authentication module
+                // site query param is mandatory for the SSOValve in jahia-authentication module
                 return new ActionResult(HttpServletResponse.SC_OK, returnUrl + "?site=" + siteKey, true, null);
             } catch (Exception e) {
                 logger.error("", e);
