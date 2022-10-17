@@ -65,6 +65,7 @@
     </scm>
     <properties>
         <jahia-depends>default,jahia-authentication,jahia-oauth</jahia-depends>
+        <export-package>org.jahiacommunity.modules.jahiaoauth.keycloak.usergroupprovider</export-package>
     </properties>
     <repositories>
         <repository>
@@ -93,6 +94,25 @@
             <artifactId>jahia-oauth</artifactId>
             <version>3.3.0</version>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jahia.modules</groupId>
+            <artifactId>external-provider-users-groups</artifactId>
+            <version>2.1.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <!-- FIX: cannot access org.eclipse.gemini.blueprint.context.BundleContextAware -->
+        <dependency>
+            <groupId>org.eclipse.gemini.blueprint</groupId>
+            <artifactId>gemini-blueprint-core</artifactId>
+            <version>1.0.2.RELEASE</version>
+            <scope>provided</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
     </dependencies>
 
