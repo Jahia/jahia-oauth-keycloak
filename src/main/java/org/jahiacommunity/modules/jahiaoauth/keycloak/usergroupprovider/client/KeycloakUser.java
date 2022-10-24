@@ -1,12 +1,10 @@
 package org.jahiacommunity.modules.jahiaoauth.keycloak.usergroupprovider.client;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.jackrabbit.util.Text;
 import org.jahia.services.usermanager.JahiaUserImpl;
 
 import java.io.Serializable;
 import java.util.List;
-import java.util.Map;
 
 public class KeycloakUser implements Serializable {
     private static final long serialVersionUID = 4919896309626638014L;
@@ -18,12 +16,6 @@ public class KeycloakUser implements Serializable {
     private String email;
     private JahiaUserImpl jahiaUser;
     private List<String> groups;
-
-    @JsonProperty("profile")
-    private void setProfile(Map<String, String> profile) {
-        firstName = profile.get("firstName");
-        email = profile.get("email");
-    }
 
     public String getId() {
         return id;

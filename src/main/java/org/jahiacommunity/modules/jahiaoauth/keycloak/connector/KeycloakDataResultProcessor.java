@@ -24,9 +24,11 @@ public class KeycloakDataResultProcessor implements ConnectorResultProcessor {
 
     @Override
     public void execute(ConnectorConfig connectorConfig, Map<String, Object> results) {
-        // store tokenData to cache
-        jahiaAuthMapperService.cacheMapperResults(KeycloakConnector.KEY, RequestContextHolder.getRequestAttributes().getSessionId(),
-                Collections.singletonMap(JahiaAuthConstants.SSO_LOGIN, new MappedProperty(
-                        new MappedPropertyInfo(JahiaAuthConstants.SSO_LOGIN), results.get(KeycloakConnector.SSO_LOGIN))));
+        if (results.containsKey(KeycloakConnector.SSO_LOGIN)) {
+            // store login to cache
+            jahiaAuthMapperService.cacheMapperResults(KeycloakConnector.KEY, RequestContextHolder.getRequestAttributes().getSessionId(),
+                    Collections.singletonMap(JahiaAuthConstants.SSO_LOGIN, new MappedProperty(
+                            new MappedPropertyInfo(JahiaAuthConstants.SSO_LOGIN), results.get(KeycloakConnector.SSO_LOGIN))));
+        }
     }
 }
