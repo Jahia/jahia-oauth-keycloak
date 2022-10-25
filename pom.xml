@@ -58,9 +58,9 @@
   <name>jahia-oauth-keycloak</name>
   <description>This is the custom module (jahia-oauth-keycloak) for running on a Jahia server.</description>
   <scm>
-    <connection>scm:git:git@github.com:tleclere-jahia/jahia-oauth-keycloak.git</connection>
-    <developerConnection>scm:git:git@github.com:tleclere-jahia/jahia-oauth-keycloak.git</developerConnection>
-    <url>https://github.com/tleclere-jahia/jahia-oauth-keycloak</url>
+    <connection>scm:git:git@github.com:Jahia/jahia-oauth-keycloak.git</connection>
+    <developerConnection>scm:git:git@github.com:Jahia/jahia-oauth-keycloak.git</developerConnection>
+    <url>https://github.com/Jahia/jahia-oauth-keycloak</url>
     <tag>HEAD</tag>
   </scm>
   <properties>
