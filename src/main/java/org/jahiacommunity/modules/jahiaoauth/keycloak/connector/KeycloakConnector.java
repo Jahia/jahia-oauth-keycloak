@@ -1,6 +1,5 @@
 package org.jahiacommunity.modules.jahiaoauth.keycloak.connector;
 
-import com.github.scribejava.apis.KeycloakApi;
 import org.jahia.modules.jahiaauth.service.ConnectorConfig;
 import org.jahia.modules.jahiaauth.service.ConnectorPropertyInfo;
 import org.jahia.modules.jahiaauth.service.ConnectorService;
@@ -28,7 +27,6 @@ public class KeycloakConnector implements OAuthConnectorService {
     private static final String REALM = "realm";
     private static final String BASEURL = "baseUrl";
     private static final String PROTECTED_RESOURCE_URL = "%s/realms/%s/protocol/openid-connect/userinfo";
-    private static final String AUTHORIZATION_URL = "%s/realms/%s/protocol/openid-connect/auth";
     public static final String SSO_LOGIN = "preferred_username";
 
     private JahiaOAuthService jahiaOAuthService;
@@ -88,9 +86,5 @@ public class KeycloakConnector implements OAuthConnectorService {
         availableProperties.add(new ConnectorPropertyInfo(SSO_LOGIN, "string"));
         availableProperties.add(new ConnectorPropertyInfo("email", "email"));
         return availableProperties;
-    }
-
-    public String getAuthorizationUrl(ConnectorConfig connectorConfig) {
-        return String.format(AUTHORIZATION_URL, connectorConfig.getProperty(BASEURL), connectorConfig.getProperty(REALM));
     }
 }

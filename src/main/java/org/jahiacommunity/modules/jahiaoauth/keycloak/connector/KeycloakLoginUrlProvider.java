@@ -3,6 +3,7 @@ package org.jahiacommunity.modules.jahiaoauth.keycloak.connector;
 import org.jahia.exceptions.JahiaException;
 import org.jahia.modules.jahiaauth.service.ConnectorConfig;
 import org.jahia.modules.jahiaauth.service.SettingsService;
+import org.jahia.modules.jahiaoauth.service.JahiaOAuthService;
 import org.jahia.params.valves.LoginUrlProvider;
 import org.jahia.services.sites.JahiaSite;
 import org.jahia.services.sites.JahiaSitesService;
@@ -19,7 +20,7 @@ public class KeycloakLoginUrlProvider implements LoginUrlProvider {
     private static final Logger logger = LoggerFactory.getLogger(KeycloakLoginUrlProvider.class);
 
     private SettingsService settingsService;
-    private KeycloakConnector keycloakConnector;
+    private JahiaOAuthService jahiaOAuthService;
     private JahiaSitesService jahiaSitesService;
 
     @Reference
@@ -28,8 +29,8 @@ public class KeycloakLoginUrlProvider implements LoginUrlProvider {
     }
 
     @Reference
-    private void setKeycloakConnector(KeycloakConnector keycloakConnector) {
-        this.keycloakConnector = keycloakConnector;
+    private void setJahiaOAuthService(JahiaOAuthService jahiaOAuthService) {
+        this.jahiaOAuthService = jahiaOAuthService;
     }
 
     @Reference
@@ -52,12 +53,12 @@ public class KeycloakLoginUrlProvider implements LoginUrlProvider {
         return siteKey;
     }
 
-    private String getAuthorizationUrl(String siteKey) {
+    private String getAuthorizationUrl(String siteKey, String sessionId) {
         ConnectorConfig connectorConfig = settingsService.getConnectorConfig(siteKey, KeycloakConnector.KEY);
         if (connectorConfig == null) {
             return null;
         }
-        return keycloakConnector.getAuthorizationUrl(connectorConfig);
+        return jahiaOAuthService.getAuthorizationUrl(connectorConfig, sessionId, null);
     }
 
     @Override
@@ -67,7 +68,7 @@ public class KeycloakLoginUrlProvider implements LoginUrlProvider {
 
     @Override
     public String getLoginUrl(HttpServletRequest httpServletRequest) {
-        String authorizationUrl = getAuthorizationUrl(getSiteKey(httpServletRequest));
+        String authorizationUrl = getAuthorizationUrl(getSiteKey(httpServletRequest), httpServletRequest.getRequestedSessionId());
         if (authorizationUrl == null) {
             return null;
         }

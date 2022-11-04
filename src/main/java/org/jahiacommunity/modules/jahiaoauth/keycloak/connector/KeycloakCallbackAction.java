@@ -10,7 +10,6 @@ import org.jahia.services.content.JCRSessionWrapper;
 import org.jahia.services.render.RenderContext;
 import org.jahia.services.render.Resource;
 import org.jahia.services.render.URLResolver;
-import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
@@ -41,8 +40,7 @@ public class KeycloakCallbackAction extends Action {
         this.settingsService = settingsService;
     }
 
-    @Activate
-    public void onActivate() {
+    public KeycloakCallbackAction() {
         setName(NAME);
         setRequireAuthenticatedUser(false);
         setRequiredMethods(Render.METHOD_GET);
