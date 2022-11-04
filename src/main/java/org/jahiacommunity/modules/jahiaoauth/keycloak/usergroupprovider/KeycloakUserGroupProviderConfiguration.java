@@ -23,7 +23,7 @@ import java.util.Dictionary;
 import java.util.Map;
 import java.util.Properties;
 
-@Component(service = UserGroupProviderConfiguration.class)
+@Component(service = UserGroupProviderConfiguration.class, immediate = true)
 public class KeycloakUserGroupProviderConfiguration implements UserGroupProviderConfiguration {
     private static final long serialVersionUID = 7815956839511561636L;
 
