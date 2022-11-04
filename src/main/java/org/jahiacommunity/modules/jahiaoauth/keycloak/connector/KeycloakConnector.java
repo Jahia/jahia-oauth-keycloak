@@ -28,6 +28,7 @@ public class KeycloakConnector implements OAuthConnectorService {
     private static final String REALM = "realm";
     private static final String BASEURL = "baseUrl";
     private static final String PROTECTED_RESOURCE_URL = "%s/realms/%s/protocol/openid-connect/userinfo";
+    private static final String AUTHORIZATION_URL = "%s/realms/%s/protocol/openid-connect/auth";
     public static final String SSO_LOGIN = "preferred_username";
 
     private JahiaOAuthService jahiaOAuthService;
@@ -89,12 +90,7 @@ public class KeycloakConnector implements OAuthConnectorService {
         return availableProperties;
     }
 
-    /* @Override
-    public void validateSettings(ConnectorConfig connectorConfig) {
-        if (userProviders.containsKey(connectorConfig.getSiteKey())) {
-            userProviders.get(connectorConfig.getSiteKey()).unregister();
-        }
-        userProviders.put(connectorConfig.getSiteKey(), new KeycloakUserProvider(this, externalUserGroupService,
-            keycloakClient, connectorConfig));
-    } */
+    public String getAuthorizationUrl(ConnectorConfig connectorConfig) {
+        return String.format(AUTHORIZATION_URL, connectorConfig.getProperty(BASEURL), connectorConfig.getProperty(REALM));
+    }
 }
