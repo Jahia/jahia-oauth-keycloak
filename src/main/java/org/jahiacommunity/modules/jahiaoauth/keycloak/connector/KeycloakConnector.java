@@ -27,7 +27,7 @@ public class KeycloakConnector implements OAuthConnectorService {
     public static final String KEY = "KeycloakApi";
     private static final String REALM = "realm";
     private static final String BASEURL = "baseUrl";
-    private static final String PROTECTED_RESOURCE_URL = "%s/auth/realms/%s/protocol/openid-connect/userinfo";
+    private static final String PROTECTED_RESOURCE_URL = "%s/realms/%s/protocol/openid-connect/userinfo";
     public static final String SSO_LOGIN = "preferred_username";
 
     private JahiaOAuthService jahiaOAuthService;

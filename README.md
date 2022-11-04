@@ -19,7 +19,7 @@ In your Keycloak realm, create a new confidential client, for instance *jahia-ad
 Activate the option "Use Refresh Tokens For Client Credentials Grant" in OpenID Connect Compatibility Modes. 
 
 The service account associated with your client needs to be allowed to view the realm users.
-1. Go to http://{keycloak}/auth/admin/{realm_name}/console/#/realms/{realm_name}/clients
+1. Go to http://{keycloak}/admin/{realm_name}/console/#/realms/{realm_name}/clients
 2. Select your client (which must be a confidential client)
 3. In the settings tab, switch Service Account Enabled to ON
 4. Click on save, the Service Account Roles tab will appear

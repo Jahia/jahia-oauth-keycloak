@@ -91,7 +91,7 @@ public class KeycloakClientService {
             headers.put(HttpHeaders.CACHE_CONTROL, "no-cache");
             headers.put(HttpHeaders.AUTHORIZATION, "Bearer " + keycloakConfiguration.getAccessToken());
             StringBuilder url = new StringBuilder();
-            url.append(keycloakConfiguration.getBaseUrl()).append("/auth/admin/realms/").append(keycloakConfiguration.getRealm());
+            url.append(keycloakConfiguration.getBaseUrl()).append("/admin/realms/").append(keycloakConfiguration.getRealm());
             url.append(api);
             try {
                 URIBuilder uriBuilder = new URIBuilder(url.toString());
@@ -144,7 +144,7 @@ public class KeycloakClientService {
         headers.put(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
         headers.put(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_FORM_URLENCODED_VALUE);
 
-        String data = httpClientService.executePost(keycloakConfiguration.getBaseUrl() + "/auth/realms/" + keycloakConfiguration.getRealm() + "/protocol/openid-connect/token", params, headers);
+        String data = httpClientService.executePost(keycloakConfiguration.getBaseUrl() + "/realms/" + keycloakConfiguration.getRealm() + "/protocol/openid-connect/token", params, headers);
         if (StringUtils.isNotBlank(data)) {
             try {
                 Map<String, Object> tokenData = objectMapper.readValue(data, objectMapper.getTypeFactory().constructMapType(Map.class, String.class, Object.class));
