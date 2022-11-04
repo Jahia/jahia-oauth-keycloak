@@ -3,7 +3,6 @@ package org.jahiacommunity.modules.jahiaoauth.keycloak.usergroupprovider.client;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.jackrabbit.util.Text;
 import org.jahia.services.usermanager.JahiaGroupImpl;
-import org.jahia.utils.TextUtils;
 
 import java.io.Serializable;
 import java.util.List;

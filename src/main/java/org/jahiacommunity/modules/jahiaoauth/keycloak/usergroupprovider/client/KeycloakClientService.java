@@ -17,10 +17,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 
 import java.net.URISyntaxException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;

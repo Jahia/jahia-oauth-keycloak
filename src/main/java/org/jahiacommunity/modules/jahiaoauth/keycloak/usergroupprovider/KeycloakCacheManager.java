@@ -6,15 +6,14 @@ import net.sf.ehcache.Ehcache;
 import net.sf.ehcache.Element;
 import net.sf.ehcache.config.CacheConfiguration;
 import org.apache.commons.lang.StringUtils;
-import org.apache.jackrabbit.util.Text;
-import org.jahiacommunity.modules.jahiaoauth.keycloak.usergroupprovider.client.KeycloakGroup;
-import org.jahiacommunity.modules.jahiaoauth.keycloak.usergroupprovider.client.KeycloakUser;
 import org.jahia.services.SpringContextSingleton;
 import org.jahia.services.cache.CacheHelper;
 import org.jahia.services.cache.ModuleClassLoaderAwareCacheEntry;
 import org.jahia.services.cache.ehcache.EhCacheProvider;
 import org.jahia.services.usermanager.JahiaGroupImpl;
 import org.jahia.services.usermanager.JahiaUserImpl;
+import org.jahiacommunity.modules.jahiaoauth.keycloak.usergroupprovider.client.KeycloakGroup;
+import org.jahiacommunity.modules.jahiaoauth.keycloak.usergroupprovider.client.KeycloakUser;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
@@ -55,10 +54,12 @@ public class KeycloakCacheManager {
     }
 
     private static Ehcache createCache(CacheManager cacheManager, String cacheName) {
-        CacheConfiguration cacheConfiguration = new CacheConfiguration();
+        CacheConfiguration cacheConfiguration = cacheManager.getConfiguration().getDefaultCacheConfiguration() != null ?
+                cacheManager.getConfiguration().getDefaultCacheConfiguration().clone() :
+                new CacheConfiguration();
         cacheConfiguration.setName(cacheName);
-        cacheConfiguration.setTimeToIdleSeconds(TIME_TO_IDLE);
         cacheConfiguration.setEternal(false);
+        cacheConfiguration.setTimeToIdleSeconds(TIME_TO_IDLE);
         // Create a new cache with the configuration
         Ehcache cache = new Cache(cacheConfiguration);
         cache.setName(cacheName);
