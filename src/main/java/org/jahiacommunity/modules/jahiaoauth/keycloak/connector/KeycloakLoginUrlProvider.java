@@ -39,21 +39,28 @@ public class KeycloakLoginUrlProvider implements LoginUrlProvider {
     }
 
     private String getSiteKey(HttpServletRequest httpServletRequest) {
-        String siteKey;
         try {
             JahiaSite jahiaSite = jahiaSitesService.getSiteByServerName(httpServletRequest.getServerName());
             if (jahiaSite != null) {
-                siteKey = jahiaSite.getSiteKey();
-            } else {
-                siteKey = jahiaSitesService.getDefaultSite().getSiteKey();
+                return jahiaSite.getSiteKey();
             }
         } catch (JahiaException e) {
-            siteKey = jahiaSitesService.getDefaultSite().getSiteKey();
+            if (logger.isDebugEnabled()) {
+                logger.debug("", e);
+            }
         }
-        return siteKey;
+
+        JahiaSite site = jahiaSitesService.getDefaultSite();
+        if (site == null) {
+            return null;
+        }
+        return site.getSiteKey();
     }
 
     private String getAuthorizationUrl(String siteKey, String sessionId) {
+        if (siteKey == null) {
+            return null;
+        }
         ConnectorConfig connectorConfig = settingsService.getConnectorConfig(siteKey, KeycloakConnector.KEY);
         if (connectorConfig == null) {
             return null;
