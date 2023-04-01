@@ -99,6 +99,19 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.bundles</groupId>
+            <artifactId>jaxrs-ri</artifactId>
+            <version>${jersey.version}</version>
+            <scope>provided</scope>
+            <exclusions>
+                <!-- WARN: Conflict with org.jahia.test:module-test-framework -->
+                <exclusion>
+                    <groupId>javax.validation</groupId>
+                    <artifactId>validation-api</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
     </dependencies>
     <repositories>
         <repository>
@@ -122,6 +135,8 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
+                        <JAX-RS-Alias>/oauth</JAX-RS-Alias>
+                        <JAX-RS-Application>org.jahiacommunity.modules.jahiaoauth.keycloak.JaxRsConfig</JAX-RS-Application>
                         <_dsannotations>*</_dsannotations>
                     </instructions>
                 </configuration>
