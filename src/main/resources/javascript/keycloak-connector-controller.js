@@ -29,7 +29,8 @@
                     baseUrl: vm.baseUrl,
                     realm: vm.realm,
                     callbackUrl: vm.callbackUrl,
-                    scope: vm.scope
+                    scope: vm.scope,
+                    logoutSSO: vm.logoutSSO,
                 }
             }).success(() => {
                 vm.connectorHasSettings = true;
@@ -52,6 +53,7 @@
                         vm.realm = data.realm;
                         vm.callbackUrl = data.callbackUrl || '';
                         vm.scope = data.scope
+                        vm.logoutSSO = data.logoutSSO;
                     } else {
                         vm.connectorHasSettings = false;
                         vm.enabled = false;

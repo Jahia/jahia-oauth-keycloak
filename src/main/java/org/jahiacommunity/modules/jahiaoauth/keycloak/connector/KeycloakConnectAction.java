@@ -21,7 +21,7 @@ import java.util.Map;
 
 @Component(service = Action.class)
 public class KeycloakConnectAction extends Action {
-    private static final Logger logger = LoggerFactory.getLogger(KeycloakCallbackAction.class);
+    private static final Logger logger = LoggerFactory.getLogger(KeycloakConnectAction.class);
 
     private static final String NAME = "connectToKeycloakAction";
 
