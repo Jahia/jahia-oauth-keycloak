@@ -1,6 +1,7 @@
 package org.jahiacommunity.modules.jahiaoauth.keycloak.connector;
 
 import org.apache.commons.lang.StringUtils;
+import org.jahia.api.content.JCRTemplate;
 import org.jahia.bin.Action;
 import org.jahia.bin.ActionResult;
 import org.jahia.bin.Render;
@@ -10,6 +11,7 @@ import org.jahia.services.content.JCRSessionWrapper;
 import org.jahia.services.render.RenderContext;
 import org.jahia.services.render.Resource;
 import org.jahia.services.render.URLResolver;
+import org.jahia.services.sites.JahiaSitesService;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
@@ -29,6 +31,8 @@ public class KeycloakCallbackAction extends Action {
 
     private JahiaOAuthService jahiaOAuthService;
     private SettingsService settingsService;
+    private JCRTemplate jcrTemplate;
+    private JahiaSitesService jahiaSitesService;
 
     @Reference
     private void setJahiaOAuthService(JahiaOAuthService jahiaOAuthService) {
@@ -38,6 +42,15 @@ public class KeycloakCallbackAction extends Action {
     @Reference
     private void setSettingsService(SettingsService settingsService) {
         this.settingsService = settingsService;
+    }
+
+    @Reference
+    private void setJcrTemplate(JCRTemplate jcrTemplate) {
+        this.jcrTemplate = jcrTemplate;
+    }
+
+    @Reference private void setJahiaSitesService(JahiaSitesService jahiaSitesService) {
+        this.jahiaSitesService = jahiaSitesService;
     }
 
     public KeycloakCallbackAction() {
@@ -60,8 +73,9 @@ public class KeycloakCallbackAction extends Action {
                 String siteKey = renderContext.getSite().getSiteKey();
                 jahiaOAuthService.extractAccessTokenAndExecuteMappers(settingsService.getConnectorConfig(siteKey, KeycloakConnector.KEY), token, httpServletRequest.getRequestedSessionId());
                 String returnUrl = (String) httpServletRequest.getSession().getAttribute(SESSION_REQUEST_URI);
-                if (returnUrl == null || StringUtils.endsWith(returnUrl, "/start")) {
-                    returnUrl = renderContext.getSite().getHome().getUrl();
+                if (returnUrl == null || StringUtils.endsWith(returnUrl, "/start") || StringUtils.endsWith(returnUrl, "/jahia/dashboard")) {
+                    returnUrl = jcrTemplate.doExecuteWithSystemSessionAsUser(null, renderContext.getWorkspace(), renderContext.getMainResourceLocale(), systemSession ->
+                            jahiaSitesService.getSiteByKey(siteKey, systemSession).getHome().getUrl());
                 }
                 // site query param is mandatory for the SSOValve in jahia-authentication module
                 return new ActionResult(HttpServletResponse.SC_OK, returnUrl + "?site=" + siteKey, true, null);
