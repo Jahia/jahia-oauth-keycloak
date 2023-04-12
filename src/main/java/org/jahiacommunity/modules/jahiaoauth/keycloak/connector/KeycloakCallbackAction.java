@@ -5,6 +5,7 @@ import org.jahia.api.content.JCRTemplate;
 import org.jahia.bin.Action;
 import org.jahia.bin.ActionResult;
 import org.jahia.bin.Render;
+import org.jahia.modules.jahiaauth.service.ConnectorConfig;
 import org.jahia.modules.jahiaauth.service.SettingsService;
 import org.jahia.modules.jahiaoauth.service.JahiaOAuthService;
 import org.jahia.services.content.JCRSessionWrapper;
@@ -49,7 +50,8 @@ public class KeycloakCallbackAction extends Action {
         this.jcrTemplate = jcrTemplate;
     }
 
-    @Reference private void setJahiaSitesService(JahiaSitesService jahiaSitesService) {
+    @Reference
+    private void setJahiaSitesService(JahiaSitesService jahiaSitesService) {
         this.jahiaSitesService = jahiaSitesService;
     }
 
@@ -71,9 +73,13 @@ public class KeycloakCallbackAction extends Action {
 
             try {
                 String siteKey = renderContext.getSite().getSiteKey();
-                jahiaOAuthService.extractAccessTokenAndExecuteMappers(settingsService.getConnectorConfig(siteKey, KeycloakConnector.KEY), token, httpServletRequest.getRequestedSessionId());
-                String returnUrl = (String) httpServletRequest.getSession().getAttribute(SESSION_REQUEST_URI);
-                if (returnUrl == null || StringUtils.endsWith(returnUrl, "/start") || StringUtils.endsWith(returnUrl, "/jahia/dashboard")) {
+                ConnectorConfig connectorConfig = settingsService.getConnectorConfig(siteKey, KeycloakConnector.KEY);
+                jahiaOAuthService.extractAccessTokenAndExecuteMappers(connectorConfig, token, httpServletRequest.getRequestedSessionId());
+                String returnUrl = connectorConfig.getProperty("returnUrl");
+                if (StringUtils.isBlank(returnUrl)) {
+                    returnUrl = (String) httpServletRequest.getSession().getAttribute(SESSION_REQUEST_URI);
+                }
+                if (StringUtils.isBlank(returnUrl) || StringUtils.endsWith(returnUrl, "/start") || StringUtils.endsWith(returnUrl, "/jahia/dashboard")) {
                     returnUrl = jcrTemplate.doExecuteWithSystemSessionAsUser(null, renderContext.getWorkspace(), renderContext.getMainResourceLocale(), systemSession ->
                             jahiaSitesService.getSiteByKey(siteKey, systemSession).getHome().getUrl());
                 }

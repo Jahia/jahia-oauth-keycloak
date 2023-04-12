@@ -97,6 +97,17 @@
                     </div>
                 </md-input-container>
             </div>
+
+            <div layout="row">
+                <md-input-container class="md-block" flex>
+                    <label message-key="label.returnURL"></label>
+                    <input type="url" ng-model="keycloak.returnUrl" name="returnUrl" />
+                    <div ng-messages="keycloakForm.returnUrl.$error" ng-show="keycloakForm.returnUrl.$invalid"
+                         role="alert">
+                        <div ng-message="url" message-key="error.notAValidURL"></div>
+                    </div>
+                </md-input-container>
+            </div>
         </form>
 
         <md-card-actions layout="row" layout-align="end center">

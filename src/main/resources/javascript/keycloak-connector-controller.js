@@ -29,6 +29,7 @@
                     baseUrl: vm.baseUrl,
                     realm: vm.realm,
                     callbackUrl: vm.callbackUrl,
+                    returnUrl: vm.returnUrl,
                     scope: vm.scope
                 }
             }).success(() => {
@@ -51,6 +52,7 @@
                         vm.baseUrl = data.baseUrl;
                         vm.realm = data.realm;
                         vm.callbackUrl = data.callbackUrl || '';
+                        vm.returnUrl = data.returnUrl || '';
                         vm.scope = data.scope
                     } else {
                         vm.connectorHasSettings = false;
