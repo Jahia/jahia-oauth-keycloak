@@ -27,7 +27,7 @@ public class KeycloakConnector implements OAuthConnectorService {
     private static final String REALM = "realm";
     private static final String BASEURL = "baseUrl";
     private static final String PROTECTED_RESOURCE_URL = "%s/realms/%s/protocol/openid-connect/userinfo";
-    public static final String SSO_LOGIN = "preferred_username";
+    protected static final String SSO_LOGIN = "preferred_username";
 
     private JahiaOAuthService jahiaOAuthService;
     private JahiaSitesService jahiaSitesService;

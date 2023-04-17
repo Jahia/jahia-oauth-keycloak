@@ -1,12 +1,15 @@
 package org.jahiacommunity.modules.jahiaoauth.keycloak.connector;
 
-import org.jahia.exceptions.JahiaException;
+import com.google.common.net.HttpHeaders;
+import org.apache.commons.lang.StringUtils;
+import org.jahia.api.content.JCRTemplate;
 import org.jahia.modules.jahiaauth.service.ConnectorConfig;
 import org.jahia.modules.jahiaauth.service.SettingsService;
 import org.jahia.modules.jahiaoauth.service.JahiaOAuthService;
 import org.jahia.params.valves.LoginUrlProvider;
-import org.jahia.services.sites.JahiaSite;
+import org.jahia.params.valves.LogoutUrlProvider;
 import org.jahia.services.sites.JahiaSitesService;
+import org.jahiacommunity.modules.jahiaoauth.keycloak.JahiaHelper;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
@@ -15,13 +18,14 @@ import org.slf4j.LoggerFactory;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.http.HttpServletRequest;
 
-@Component(service = LoginUrlProvider.class)
-public class KeycloakLoginUrlProvider implements LoginUrlProvider {
-    private static final Logger logger = LoggerFactory.getLogger(KeycloakLoginUrlProvider.class);
+@Component(service = {LoginUrlProvider.class, LogoutUrlProvider.class})
+public class KeycloakLoginLogoutUrlProvider implements LoginUrlProvider, LogoutUrlProvider {
+    private static final Logger logger = LoggerFactory.getLogger(KeycloakLoginLogoutUrlProvider.class);
 
     private SettingsService settingsService;
     private JahiaOAuthService jahiaOAuthService;
     private JahiaSitesService jahiaSitesService;
+    private JCRTemplate jcrTemplate;
 
     @Reference
     private void setSettingsService(SettingsService settingsService) {
@@ -38,23 +42,9 @@ public class KeycloakLoginUrlProvider implements LoginUrlProvider {
         this.jahiaSitesService = jahiaSitesService;
     }
 
-    private String getSiteKey(HttpServletRequest httpServletRequest) {
-        try {
-            JahiaSite jahiaSite = jahiaSitesService.getSiteByServerName(httpServletRequest.getServerName());
-            if (jahiaSite != null) {
-                return jahiaSite.getSiteKey();
-            }
-        } catch (JahiaException e) {
-            if (logger.isDebugEnabled()) {
-                logger.debug("", e);
-            }
-        }
-
-        JahiaSite site = jahiaSitesService.getDefaultSite();
-        if (site == null) {
-            return null;
-        }
-        return site.getSiteKey();
+    @Reference
+    private void setJcrTemplate(JCRTemplate jcrTemplate) {
+        this.jcrTemplate = jcrTemplate;
     }
 
     private String getAuthorizationUrl(String siteKey, String sessionId) {
@@ -75,7 +65,7 @@ public class KeycloakLoginUrlProvider implements LoginUrlProvider {
 
     @Override
     public String getLoginUrl(HttpServletRequest httpServletRequest) {
-        String authorizationUrl = getAuthorizationUrl(getSiteKey(httpServletRequest), httpServletRequest.getRequestedSessionId());
+        String authorizationUrl = getAuthorizationUrl(JahiaHelper.getSiteKey(httpServletRequest, jcrTemplate, jahiaSitesService), httpServletRequest.getRequestedSessionId());
         if (authorizationUrl == null) {
             return null;
         }
@@ -88,5 +78,34 @@ public class KeycloakLoginUrlProvider implements LoginUrlProvider {
         httpServletRequest.getSession(false).setAttribute(KeycloakCallbackAction.SESSION_REQUEST_URI, originalRequestUri);
         // redirect to SSO
         return authorizationUrl;
+    }
+
+    @Override
+    public boolean hasCustomLogoutUrl() {
+        return true;
+    }
+
+    @Override
+    public String getLogoutUrl(HttpServletRequest httpServletRequest) {
+        String siteKey = JahiaHelper.getSiteKey(httpServletRequest, jcrTemplate, jahiaSitesService);
+        if (StringUtils.isBlank(siteKey)) {
+            return null;
+        }
+        ConnectorConfig connectorConfig = settingsService.getConnectorConfig(siteKey, KeycloakConnector.KEY);
+        if (connectorConfig == null || connectorConfig.getProperty("logoutSSO") == null || !Boolean.parseBoolean(connectorConfig.getProperty("logoutSSO"))) {
+            return null;
+        }
+        String authorizationUrl = getAuthorizationUrl(siteKey, httpServletRequest.getRequestedSessionId());
+        if (authorizationUrl == null) {
+            return null;
+        }
+
+        String scheme = httpServletRequest.getHeader(HttpHeaders.X_FORWARDED_PROTO);
+        if (scheme == null) {
+            scheme = httpServletRequest.getScheme();
+        }
+        return StringUtils.substringBeforeLast(authorizationUrl, "/") + "/logout?redirect_uri=" +
+                scheme + "://" + httpServletRequest.getHeader(HttpHeaders.HOST) +
+                httpServletRequest.getContextPath() + "/cms/logout";
     }
 }

@@ -30,7 +30,8 @@
                     realm: vm.realm,
                     callbackUrl: vm.callbackUrl,
                     returnUrl: vm.returnUrl,
-                    scope: vm.scope
+                    scope: vm.scope,
+                    logoutSSO: vm.logoutSSO
                 }
             }).success(() => {
                 vm.connectorHasSettings = true;
@@ -43,7 +44,7 @@
         vm.toggleCard = () => vm.expandedCard = !vm.expandedCard;
 
         vm.init = () => {
-            settingsService.getConnectorData(CONNECTOR_SERVICE_NAME, ['enabled', 'apiKey', 'baseUrl', 'realm', 'callbackUrl', 'scope'])
+            settingsService.getConnectorData(CONNECTOR_SERVICE_NAME, ['enabled', 'apiKey', 'baseUrl', 'realm', 'callbackUrl', 'returnUrl', 'scope', 'logoutSSO'])
                 .success(data => {
                     if (data && !angular.equals(data, {})) {
                         vm.expandedCard = vm.connectorHasSettings = true;
@@ -53,7 +54,8 @@
                         vm.realm = data.realm;
                         vm.callbackUrl = data.callbackUrl || '';
                         vm.returnUrl = data.returnUrl || '';
-                        vm.scope = data.scope
+                        vm.scope = data.scope;
+                        vm.logoutSSO = data.logoutSSO === 'true';
                     } else {
                         vm.connectorHasSettings = false;
                         vm.enabled = false;

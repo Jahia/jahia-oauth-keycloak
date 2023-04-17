@@ -108,6 +108,10 @@
                     </div>
                 </md-input-container>
             </div>
+
+            <md-switch ng-model="keycloak.logoutSSO">
+                <span message-key="label.logoutSSO"></span>
+            </md-switch>
         </form>
 
         <md-card-actions layout="row" layout-align="end center">

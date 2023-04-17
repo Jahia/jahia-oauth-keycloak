@@ -14,31 +14,12 @@ public class KeycloakApi extends DefaultApi20 {
 
     private final String baseUrlWithRealm;
 
-    protected KeycloakApi(String baseUrlWithRealm) {
+    private KeycloakApi(String baseUrlWithRealm) {
         this.baseUrlWithRealm = baseUrlWithRealm;
     }
 
-    public static KeycloakApi instance() {
-        return instance("http://localhost:8080/", "master");
-    }
-
     public static KeycloakApi instance(String baseUrl, String realm) {
-        final String defaultBaseUrlWithRealm = composeBaseUrlWithRealm(baseUrl, realm);
-
-        //java8: switch to ConcurrentMap::computeIfAbsent
-        KeycloakApi api = INSTANCES.get(defaultBaseUrlWithRealm);
-        if (api == null) {
-            api = new KeycloakApi(defaultBaseUrlWithRealm);
-            final KeycloakApi alreadyCreatedApi = INSTANCES.putIfAbsent(defaultBaseUrlWithRealm, api);
-            if (alreadyCreatedApi != null) {
-                return alreadyCreatedApi;
-            }
-        }
-        return api;
-    }
-
-    protected static String composeBaseUrlWithRealm(String baseUrl, String realm) {
-        return baseUrl + (baseUrl.endsWith("/") ? "" : "/") + "realms/" + realm;
+        return INSTANCES.computeIfAbsent(baseUrl + (baseUrl.endsWith("/") ? "" : "/") + "realms/" + realm, KeycloakApi::new);
     }
 
     @Override
@@ -54,10 +35,5 @@ public class KeycloakApi extends DefaultApi20 {
     @Override
     public TokenExtractor<OAuth2AccessToken> getAccessTokenExtractor() {
         return OpenIdJsonTokenExtractor.instance();
-    }
-
-    @Override
-    public String getRevokeTokenEndpoint() {
-        throw new RuntimeException("Not implemented yet");
     }
 }
