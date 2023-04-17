@@ -1,6 +1,5 @@
 package org.jahiacommunity.modules.jahiaoauth.keycloak.usergroupprovider.client;
 
-import org.apache.jackrabbit.util.Text;
 import org.jahia.services.usermanager.JahiaUserImpl;
 
 import java.io.Serializable;
@@ -23,10 +22,6 @@ public class KeycloakUser implements Serializable {
 
     public String getUsername() {
         return username;
-    }
-
-    public String getEncodedUsername() {
-        return Text.escapeIllegalJcrChars(username);
     }
 
     public String getFirstName() {

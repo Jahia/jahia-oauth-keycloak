@@ -1,7 +1,6 @@
 package org.jahiacommunity.modules.jahiaoauth.keycloak.usergroupprovider.client;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.jackrabbit.util.Text;
 import org.jahia.services.usermanager.JahiaGroupImpl;
 
 import java.io.Serializable;
@@ -29,10 +28,6 @@ public class KeycloakGroup implements Serializable {
 
     public String getName() {
         return name;
-    }
-
-    public String getEncodedName() {
-        return Text.escapeIllegalJcrChars(name);
     }
 
     public String getPath() {

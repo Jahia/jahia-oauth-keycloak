@@ -6,6 +6,7 @@ import net.sf.ehcache.Ehcache;
 import net.sf.ehcache.Element;
 import net.sf.ehcache.config.CacheConfiguration;
 import org.apache.commons.lang.StringUtils;
+import org.jahia.api.Constants;
 import org.jahia.services.SpringContextSingleton;
 import org.jahia.services.cache.CacheHelper;
 import org.jahia.services.cache.ModuleClassLoaderAwareCacheEntry;
@@ -79,39 +80,43 @@ public class KeycloakCacheManager {
         }
     }
 
-    public Optional<KeycloakUser> getUser(String providerKey, String username) {
-        return Optional.ofNullable((KeycloakUser) CacheHelper.getObjectValue(userCache, getCacheNameKey(providerKey, username)));
+    public Optional<KeycloakUser> getUser(String providerKey, String siteKey, String username) {
+        return Optional.ofNullable((KeycloakUser) CacheHelper.getObjectValue(userCache, getCacheNameKey(providerKey, siteKey, username)));
     }
 
-    public Optional<KeycloakUser> getOrRefreshUser(String providerKey, String username, Supplier<Optional<KeycloakUser>> supplier) {
-        return getUser(providerKey, username).map(Optional::of).orElseGet(() -> {
+    public Optional<KeycloakUser> getOrRefreshUser(String providerKey, String siteKey, String username, Supplier<Optional<KeycloakUser>> supplier) {
+        return getUser(providerKey, siteKey, username).map(Optional::of).orElseGet(() -> {
             Optional<KeycloakUser> keycloakUser = supplier.get();
-            keycloakUser.ifPresent(user -> cacheUser(providerKey, user));
+            keycloakUser.ifPresent(user -> cacheUser(providerKey, siteKey, user));
             return keycloakUser;
         });
     }
 
-    public void cacheUser(String providerKey, KeycloakUser keycloakUser) {
+    public void cacheUser(String providerKey, String siteKey, KeycloakUser keycloakUser) {
         if (logger.isDebugEnabled()) {
-            logger.debug("Caching user ({}): {}", keycloakUser.getUsername(), keycloakUser.getEmail());
+            logger.debug("Caching user ({}): {} in site {}", keycloakUser.getUsername(), keycloakUser.getEmail(), siteKey);
         }
         Properties properties = new Properties();
-        if (StringUtils.isNotBlank(keycloakUser.getFirstName()))
+        if (StringUtils.isNotBlank(keycloakUser.getFirstName())) {
             properties.put("j:firstName", keycloakUser.getFirstName());
-        if (StringUtils.isNotBlank(keycloakUser.getLastName()))
+        }
+        if (StringUtils.isNotBlank(keycloakUser.getLastName())) {
             properties.put("j:lastName", keycloakUser.getLastName());
-        if (StringUtils.isNotBlank(keycloakUser.getEmail())) properties.put("j:email", keycloakUser.getEmail());
-        keycloakUser.setJahiaUser(new JahiaUserImpl(keycloakUser.getEncodedUsername(), null, properties, false, providerKey));
+        }
+        if (StringUtils.isNotBlank(keycloakUser.getEmail())) {
+            properties.put("j:email", keycloakUser.getEmail());
+        }
+        keycloakUser.setJahiaUser(new JahiaUserImpl(keycloakUser.getId(), keycloakUser.getId(), properties, false, providerKey, siteKey));
         ModuleClassLoaderAwareCacheEntry cacheEntry = new ModuleClassLoaderAwareCacheEntry(keycloakUser, KeycloakUserGroupProviderConfiguration.KEY);
-        userCache.put(new Element(getCacheNameKey(providerKey, keycloakUser.getEncodedUsername()), cacheEntry));
+        userCache.put(new Element(getCacheNameKey(providerKey, siteKey, keycloakUser.getId()), cacheEntry));
     }
 
-    public Optional<KeycloakGroup> getGroup(String providerKey, String groupname) {
-        return Optional.ofNullable((KeycloakGroup) CacheHelper.getObjectValue(groupCache, getCacheNameKey(providerKey, groupname)));
+    public Optional<KeycloakGroup> getGroup(String providerKey, String siteKey, String groupname) {
+        return Optional.ofNullable((KeycloakGroup) CacheHelper.getObjectValue(groupCache, getCacheNameKey(providerKey, siteKey, groupname)));
     }
 
     public Optional<KeycloakGroup> getOrRefreshGroup(String providerKey, String siteKey, String groupname, Supplier<Optional<KeycloakGroup>> supplier) {
-        return getGroup(providerKey, groupname).map(Optional::of).orElseGet(() -> {
+        return getGroup(providerKey, siteKey, groupname).map(Optional::of).orElseGet(() -> {
             Optional<KeycloakGroup> keycloakGroup = supplier.get();
             keycloakGroup.ifPresent(group -> cacheGroup(providerKey, siteKey, group));
             return keycloakGroup;
@@ -120,15 +125,17 @@ public class KeycloakCacheManager {
 
     public void cacheGroup(String providerKey, String siteKey, KeycloakGroup keycloakGroup) {
         if (logger.isDebugEnabled()) {
-            logger.debug("Caching group ({}): {}", keycloakGroup.getName(), keycloakGroup.getName());
+            logger.debug("Caching group ({}): {} in site {}", keycloakGroup.getName(), keycloakGroup.getName(), siteKey);
         }
-        keycloakGroup.setJahiaGroup(new JahiaGroupImpl(keycloakGroup.getEncodedName(), null, siteKey, new Properties()));
+        Properties properties = new Properties();
+        properties.put(Constants.JCR_TITLE, keycloakGroup.getName());
+        keycloakGroup.setJahiaGroup(new JahiaGroupImpl(keycloakGroup.getId(), keycloakGroup.getId(), siteKey, properties));
         ModuleClassLoaderAwareCacheEntry cacheEntry = new ModuleClassLoaderAwareCacheEntry(keycloakGroup, KeycloakUserGroupProviderConfiguration.KEY);
-        groupCache.put(new Element(getCacheNameKey(providerKey, keycloakGroup.getEncodedName()), cacheEntry));
+        groupCache.put(new Element(getCacheNameKey(providerKey, siteKey, keycloakGroup.getId()), cacheEntry));
     }
 
-    private static String getCacheNameKey(String providerKey, String objectName) {
-        return providerKey + "_" + KeycloakUserGroupProviderConfiguration.KEY + "_" + objectName;
+    private static String getCacheNameKey(String providerKey, String siteKey, String objectName) {
+        return providerKey + "_" + siteKey + "_" + KeycloakUserGroupProviderConfiguration.KEY + "_" + objectName;
     }
 
     public void flushCaches() {

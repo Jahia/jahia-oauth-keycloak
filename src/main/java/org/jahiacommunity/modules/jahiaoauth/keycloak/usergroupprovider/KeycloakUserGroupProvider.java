@@ -1,16 +1,17 @@
 package org.jahiacommunity.modules.jahiaoauth.keycloak.usergroupprovider;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.jahiacommunity.modules.jahiaoauth.keycloak.usergroupprovider.client.KeycloakClientService;
-import org.jahiacommunity.modules.jahiaoauth.keycloak.usergroupprovider.client.KeycloakGroup;
-import org.jahiacommunity.modules.jahiaoauth.keycloak.usergroupprovider.client.KeycloakUser;
 import org.jahia.exceptions.JahiaRuntimeException;
 import org.jahia.modules.external.users.BaseUserGroupProvider;
 import org.jahia.modules.external.users.GroupNotFoundException;
 import org.jahia.modules.external.users.Member;
 import org.jahia.modules.external.users.UserNotFoundException;
 import org.jahia.services.usermanager.JahiaGroup;
+import org.jahia.services.usermanager.JahiaGroupManagerService;
 import org.jahia.services.usermanager.JahiaUser;
+import org.jahiacommunity.modules.jahiaoauth.keycloak.usergroupprovider.client.KeycloakClientService;
+import org.jahiacommunity.modules.jahiaoauth.keycloak.usergroupprovider.client.KeycloakGroup;
+import org.jahiacommunity.modules.jahiaoauth.keycloak.usergroupprovider.client.KeycloakUser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,42 +50,51 @@ public class KeycloakUserGroupProvider extends BaseUserGroupProvider {
     }
 
     @Override
-    public JahiaUser getUser(String username) throws UserNotFoundException {
+    public JahiaUser getUser(String userId) throws UserNotFoundException {
         if (!isAvailable()) {
             throw new UserNotFoundException();
         }
-        return keycloakCacheManager.getOrRefreshUser(getKey(), username, () -> keycloakClientService.getUser(keycloakConfiguration, username))
-                .orElseThrow(() -> new UserNotFoundException("User '" + username + "' not found.")).getJahiaUser();
+        return keycloakCacheManager.getOrRefreshUser(getKey(), getSiteKey(), userId, () -> keycloakClientService.getUser(keycloakConfiguration, userId))
+                .orElseThrow(() -> new UserNotFoundException("User '" + userId + "' not found.")).getJahiaUser();
     }
 
     @Override
-    public JahiaGroup getGroup(String groupEncodedName) throws GroupNotFoundException {
+    public JahiaGroup getGroup(String groupId) throws GroupNotFoundException {
         if (!isAvailable()) {
             throw new GroupNotFoundException();
         }
-        return keycloakCacheManager.getOrRefreshGroup(getKey(), getSiteKey(), groupEncodedName, () -> keycloakClientService.getGroup(keycloakConfiguration, groupEncodedName))
-                .orElseThrow(() -> new GroupNotFoundException("Group '" + groupEncodedName + "' not found.")).getJahiaGroup();
+        if (JahiaGroupManagerService.PROTECTED_GROUPS.contains(groupId) || JahiaGroupManagerService.POWERFUL_GROUPS.contains(groupId)) {
+            logger.warn("Group {} is protected", groupId);
+            return null;
+        }
+        return keycloakCacheManager.getOrRefreshGroup(getKey(), getSiteKey(), groupId, () -> keycloakClientService.getGroup(keycloakConfiguration, groupId))
+                .orElseThrow(() -> new GroupNotFoundException("Group '" + groupId + "' not found.")).getJahiaGroup();
     }
 
     @Override
-    public List<Member> getGroupMembers(String groupEncodedName) {
+    public List<Member> getGroupMembers(String groupId) {
         if (!isAvailable()) {
             throw new JahiaRuntimeException("Service not available");
         }
-        // List of members in the groupname
-        Optional<KeycloakGroup> group = keycloakCacheManager.getGroup(getKey(), groupEncodedName);
-        if (group.isPresent() && CollectionUtils.isNotEmpty(group.get().getMembers())) {
+        if (JahiaGroupManagerService.PROTECTED_GROUPS.contains(groupId) || JahiaGroupManagerService.POWERFUL_GROUPS.contains(groupId)) {
+            logger.warn("Group {} is protected", groupId);
+            return null;
+        }
+        // List of members in the groupId
+        Optional<KeycloakGroup> group = keycloakCacheManager.getGroup(getKey(), getSiteKey(), groupId);
+        if (!group.isPresent()) {
+            return Collections.emptyList();
+        }
+        if (CollectionUtils.isNotEmpty(group.get().getMembers())) {
             return group.get().getMembers().stream().map(member -> new Member(member, Member.MemberType.USER))
                     .collect(Collectors.toList());
         }
 
         List<Member> members = new ArrayList<>();
-        if (group.isPresent()) {
-            keycloakClientService.getGroupMembers(keycloakConfiguration, group.get().getId()).orElse(Collections.emptyList())
-                    .forEach(user -> members.add(new Member(user.getEncodedUsername(), Member.MemberType.USER)));
-            keycloakCacheManager.getOrRefreshGroup(getKey(), getSiteKey(), groupEncodedName, () -> keycloakClientService.getGroup(keycloakConfiguration, group.get().getName()))
-                    .ifPresent(g -> g.setMembers(members.stream().map(Member::getName).collect(Collectors.toList())));
-        }
+        keycloakClientService.getGroupMembers(keycloakConfiguration, groupId).orElse(Collections.emptyList())
+                .forEach(user -> members.add(new Member(user.getId(), Member.MemberType.USER)));
+        keycloakCacheManager.getOrRefreshGroup(getKey(), getSiteKey(), groupId, () -> keycloakClientService.getGroup(keycloakConfiguration, groupId))
+                .ifPresent(g -> g.setMembers(members.stream().map(Member::getName).collect(Collectors.toList())));
         return Collections.unmodifiableList(members);
     }
 
@@ -93,21 +103,25 @@ public class KeycloakUserGroupProvider extends BaseUserGroupProvider {
         if (!isAvailable()) {
             throw new JahiaRuntimeException("Service not available");
         }
+        if (member.getType() == Member.MemberType.GROUP) {
+            return Collections.emptyList();
+        }
 
         // List of groups this principal belongs to
-        String username = member.getName();
-        Optional<KeycloakUser> user = keycloakCacheManager.getUser(getKey(), username);
-        if (user.isPresent() && CollectionUtils.isNotEmpty(user.get().getGroups())) {
+        String userId = member.getName();
+        Optional<KeycloakUser> user = keycloakCacheManager.getUser(getKey(), getSiteKey(), userId);
+        if (!user.isPresent()) {
+            return Collections.emptyList();
+        }
+        if (CollectionUtils.isNotEmpty(user.get().getGroups())) {
             return user.get().getGroups();
         }
 
         List<String> groups = new ArrayList<>();
-        if (user.isPresent()) {
-            keycloakClientService.getMembership(keycloakConfiguration, user.get().getId()).orElse(Collections.emptyList())
-                    .forEach(group -> groups.add(group.getEncodedName()));
-            keycloakCacheManager.getOrRefreshUser(getKey(), username, () -> keycloakClientService.getUser(keycloakConfiguration, username))
-                    .ifPresent(u -> u.setGroups(groups));
-        }
+        keycloakClientService.getMembership(keycloakConfiguration, userId).orElse(Collections.emptyList())
+                .forEach(group -> groups.add(group.getId()));
+        keycloakCacheManager.getOrRefreshUser(getKey(), getSiteKey(), userId, () -> keycloakClientService.getUser(keycloakConfiguration, userId))
+                .ifPresent(u -> u.setGroups(groups));
         return Collections.unmodifiableList(groups);
     }
 
@@ -118,20 +132,26 @@ public class KeycloakUserGroupProvider extends BaseUserGroupProvider {
         }
 
         // search one user in the cache
-        if (searchCriteria.containsKey(PROP_USERNAME) && searchCriteria.size() == 1 && !searchCriteria.getProperty(PROP_USERNAME).contains("*")) {
-            String username = (String) searchCriteria.get(PROP_USERNAME);
-            return keycloakCacheManager.getOrRefreshUser(getKey(), username, () -> keycloakClientService.getUser(keycloakConfiguration, username))
-                    .map(user -> Collections.singletonList(user.getEncodedUsername()))
+        if (searchCriteria.containsKey(PROP_USERNAME) && searchCriteria.size() == 1) {
+            String userId = searchCriteria.getProperty(PROP_USERNAME);
+            return keycloakCacheManager.getOrRefreshUser(getKey(), getSiteKey(), userId, () -> keycloakClientService.getUser(keycloakConfiguration, userId))
+                    .map(keycloakUser -> Collections.singletonList(keycloakUser.getId()))
                     .orElse(Collections.emptyList());
         }
 
-        List<String> users = new ArrayList<>();
-        keycloakClientService.getUsers(keycloakConfiguration, "", offset, limit).orElse(Collections.emptyList())
+        Optional<List<KeycloakUser>> keycloakUsers;
+        if (searchCriteria.containsKey("*")) {
+            keycloakUsers = keycloakClientService.getUsers(keycloakConfiguration, searchCriteria.getProperty("*").replace("*", ""), offset, limit);
+        } else {
+            keycloakUsers = keycloakClientService.getUsers(keycloakConfiguration, "", offset, limit);
+        }
+        List<String> userIds = new ArrayList<>();
+        keycloakUsers.orElse(Collections.emptyList())
                 .forEach(user -> {
-                    users.add(user.getEncodedUsername());
-                    keycloakCacheManager.cacheUser(getKey(), user);
+                    userIds.add(user.getId());
+                    keycloakCacheManager.cacheUser(getKey(), getSiteKey(), user);
                 });
-        return Collections.unmodifiableList(users);
+        return Collections.unmodifiableList(userIds);
     }
 
     @Override
@@ -141,20 +161,24 @@ public class KeycloakUserGroupProvider extends BaseUserGroupProvider {
         }
 
         // search one group in the cache
-        if (searchCriteria.containsKey(PROP_GROUPNAME) && searchCriteria.size() == 1 && !searchCriteria.getProperty(PROP_GROUPNAME).contains("*")) {
-            String groupname = (String) searchCriteria.get(PROP_GROUPNAME);
-            return keycloakCacheManager.getOrRefreshGroup(getKey(), getSiteKey(), groupname, () -> keycloakClientService.getGroup(keycloakConfiguration, groupname))
-                    .map(group -> Collections.singletonList(group.getEncodedName()))
+        if (searchCriteria.containsKey(PROP_GROUPNAME) && searchCriteria.size() == 1) {
+            String groupId = searchCriteria.getProperty(PROP_GROUPNAME);
+            if (JahiaGroupManagerService.PROTECTED_GROUPS.contains(groupId) || JahiaGroupManagerService.POWERFUL_GROUPS.contains(groupId)) {
+                logger.warn("Group {} is protected", groupId);
+                return Collections.emptyList();
+            }
+            return keycloakCacheManager.getOrRefreshGroup(getKey(), getSiteKey(), groupId, () -> keycloakClientService.getGroup(keycloakConfiguration, groupId))
+                    .map(keycloakGroup -> Collections.singletonList(keycloakGroup.getId()))
                     .orElse(Collections.emptyList());
         }
 
-        List<String> groups = new ArrayList<>();
+        List<String> groupIds = new ArrayList<>();
         keycloakClientService.getGroups(keycloakConfiguration, "", offset, limit).orElse(Collections.emptyList())
                 .forEach(group -> {
-                    groups.add(group.getEncodedName());
+                    groupIds.add(group.getId());
                     keycloakCacheManager.cacheGroup(getKey(), getSiteKey(), group);
                 });
-        return Collections.unmodifiableList(groups);
+        return Collections.unmodifiableList(groupIds);
     }
 
     @Override

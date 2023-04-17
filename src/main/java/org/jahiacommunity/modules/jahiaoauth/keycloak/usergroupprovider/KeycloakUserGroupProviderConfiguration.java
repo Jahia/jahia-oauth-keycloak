@@ -25,11 +25,12 @@ import java.util.Properties;
 
 @Component(service = UserGroupProviderConfiguration.class)
 public class KeycloakUserGroupProviderConfiguration implements UserGroupProviderConfiguration {
+    private static final Logger logger = LoggerFactory.getLogger(KeycloakUserGroupProviderConfiguration.class);
+
     private static final long serialVersionUID = 7815956839511561636L;
 
-    public static final String KEY = "keycloak";
-    public static final String PROVIDER_KEY_PROP = KEY + ".provider.key";
-    private static final Logger logger = LoggerFactory.getLogger(KeycloakUserGroupProviderConfiguration.class);
+    protected static final String KEY = "keycloak";
+    protected static final String PROVIDER_KEY_PROP = KEY + ".provider.key";
 
     private KeycloakKarafConfigurationFactory keycloakKarafConfigurationFactory;
     private ConfigurationAdmin configurationAdmin;
