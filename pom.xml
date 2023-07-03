@@ -53,7 +53,7 @@
     </parent>
     <groupId>org.jahiacommunity.modules</groupId>
     <artifactId>jahia-oauth-keycloak</artifactId>
-    <version>1.1.1-SNAPSHOT</version>
+    <version>1.1.1</version>
     <packaging>bundle</packaging>
     <name>jahia-oauth-keycloak</name>
     <description>This is the custom module (jahia-oauth-keycloak) for running on a Jahia server.</description>
@@ -61,7 +61,7 @@
         <connection>scm:git:git@github.com:Jahia/jahia-oauth-keycloak.git</connection>
         <developerConnection>scm:git:git@github.com:Jahia/jahia-oauth-keycloak.git</developerConnection>
         <url>https://github.com/Jahia/jahia-oauth-keycloak</url>
-        <tag>HEAD</tag>
+        <tag>jahia-oauth-keycloak-1.1.1</tag>
     </scm>
     <properties>
         <export-package>org.jahiacommunity.modules.jahiaoauth.keycloak.usergroupprovider</export-package>
