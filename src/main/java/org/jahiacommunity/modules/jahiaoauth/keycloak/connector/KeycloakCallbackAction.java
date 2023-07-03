@@ -64,7 +64,7 @@ public class KeycloakCallbackAction extends Action {
     @Override
     public ActionResult doExecute(HttpServletRequest httpServletRequest, RenderContext renderContext, Resource resource,
                                   JCRSessionWrapper jcrSessionWrapper, Map<String, List<String>> parameters,
-                                  URLResolver urlResolver) throws Exception {
+                                  URLResolver urlResolver) {
         if (parameters.containsKey("code")) {
             final String token = getRequiredParameter(parameters, "code");
             if (StringUtils.isBlank(token)) {

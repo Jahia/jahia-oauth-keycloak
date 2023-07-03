@@ -19,8 +19,6 @@
 </c:if>
 <template:addResources type="javascript" resources="keycloak-connector-controller.js"/>
 
-<template:addResources type="javascript" resources="keycloak-oauth-connector/keycloak-controller.js"/>
-
 <md-card ng-controller="KeycloakController as keycloak" ng-init="keycloak.init()">
     <div layout="row">
         <md-card-title flex>

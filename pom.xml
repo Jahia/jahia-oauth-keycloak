@@ -136,7 +136,7 @@
                             <goal>javascript-dictionary</goal>
                         </goals>
                         <configuration>
-                            <dictionaryName>jcauthi18n</dictionaryName>
+                            <dictionaryName>jcauthkeycloaki18n</dictionaryName>
                         </configuration>
                     </execution>
                 </executions>

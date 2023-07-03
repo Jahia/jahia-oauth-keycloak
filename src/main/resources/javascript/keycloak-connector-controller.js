@@ -6,7 +6,7 @@
 
     function KeycloakController($location, settingsService, helperService, i18nService) {
         // must mach value in the plugin in pom.xml
-        i18nService.addKey(jcauthi18n);
+        i18nService.addKey(jcauthkeycloaki18n);
 
         const CONNECTOR_SERVICE_NAME = 'KeycloakApi';
 

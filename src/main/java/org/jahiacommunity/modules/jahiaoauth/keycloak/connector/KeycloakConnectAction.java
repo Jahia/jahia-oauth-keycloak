@@ -46,7 +46,7 @@ public class KeycloakConnectAction extends Action {
 
     @Override
     public ActionResult doExecute(HttpServletRequest req, RenderContext renderContext, Resource resource, JCRSessionWrapper session,
-                                  Map<String, List<String>> parameters, URLResolver urlResolver) throws Exception {
+                                  Map<String, List<String>> parameters, URLResolver urlResolver) {
         return new ActionResult(HttpServletResponse.SC_OK, jahiaOAuthService.getAuthorizationUrl(
                 settingsService.getConnectorConfig(renderContext.getSite().getSiteKey(), KeycloakConnector.KEY),
                 req.getRequestedSessionId()), true, null);
