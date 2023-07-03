@@ -2,8 +2,8 @@ package org.jahiacommunity.modules.jahiaoauth.keycloak.usergroupprovider.client;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hc.core5.http.HttpHeaders;
@@ -46,26 +46,22 @@ public class KeycloakClientService {
         this.httpClientService = httpClientService;
     }
 
-    public Optional<KeycloakUser> getUser(KeycloakConfiguration keycloakConfiguration, String username) {
-        return callEndpoint(keycloakConfiguration, "/users", Collections.singletonMap("username", username), -1, -1, KeycloakUser.class)
-                .filter(CollectionUtils::isNotEmpty)
-                .map(users -> users.get(0));
+    public Optional<KeycloakUser> getUser(KeycloakConfiguration keycloakConfiguration, String userId) {
+        return callEndpoint(keycloakConfiguration, "/users/" + userId, Collections.emptyMap(), -1, -1, objectMapper.constructType(KeycloakUser.class));
 
     }
 
     public Optional<List<KeycloakUser>> getUsers(KeycloakConfiguration keycloakConfiguration, String search, long offset, long limit) {
-        return callEndpoint(keycloakConfiguration, "/users", Collections.singletonMap("username", search), offset, limit, KeycloakUser.class);
+        return callEndpoint(keycloakConfiguration, "/users", Collections.singletonMap("search", search), offset, limit, objectMapper.getTypeFactory().constructCollectionType(List.class, KeycloakUser.class));
     }
 
-    public Optional<KeycloakGroup> getGroup(KeycloakConfiguration keycloakConfiguration, String groupname) {
-        return callEndpoint(keycloakConfiguration, "/groups", Collections.singletonMap("search", groupname), -1, -1, KeycloakGroup.class)
-                .filter(CollectionUtils::isNotEmpty)
-                .map(users -> users.get(0));
+    public Optional<KeycloakGroup> getGroup(KeycloakConfiguration keycloakConfiguration, String groupId) {
+        return callEndpoint(keycloakConfiguration, "/groups/" + groupId, Collections.emptyMap(), -1, -1, objectMapper.constructType(KeycloakGroup.class));
     }
 
     public Optional<List<KeycloakGroup>> getGroups(KeycloakConfiguration keycloakConfiguration, String search, long offset, long limit) {
-        return callEndpoint(keycloakConfiguration, "/groups", Collections.singletonMap("search", search), offset, limit, KeycloakGroup.class)
-                .map(keycloakGroups -> keycloakGroups.stream().flatMap(this::flatMapRecursive).collect(Collectors.toList()));
+        return callEndpoint(keycloakConfiguration, "/groups", Collections.singletonMap("search", search), offset, limit, objectMapper.getTypeFactory().constructCollectionType(List.class, KeycloakGroup.class))
+                .map(keycloakGroups -> ((List<KeycloakGroup>) keycloakGroups).stream().flatMap(this::flatMapRecursive).collect(Collectors.toList()));
     }
 
     private Stream<KeycloakGroup> flatMapRecursive(KeycloakGroup keycloakGroup) {
@@ -75,14 +71,14 @@ public class KeycloakClientService {
     }
 
     public Optional<List<KeycloakUser>> getGroupMembers(KeycloakConfiguration keycloakConfiguration, String groupId) {
-        return callEndpoint(keycloakConfiguration, "/groups/" + groupId + "/members", null, -1, -1, KeycloakUser.class);
+        return callEndpoint(keycloakConfiguration, "/groups/" + groupId + "/members", null, -1, -1, objectMapper.getTypeFactory().constructCollectionType(List.class, KeycloakUser.class));
     }
 
     public Optional<List<KeycloakGroup>> getMembership(KeycloakConfiguration keycloakConfiguration, String userId) {
-        return callEndpoint(keycloakConfiguration, "/users/" + userId + "/groups", null, -1, -1, KeycloakGroup.class);
+        return callEndpoint(keycloakConfiguration, "/users/" + userId + "/groups", null, -1, -1, objectMapper.getTypeFactory().constructCollectionType(List.class, KeycloakGroup.class));
     }
 
-    private <T> Optional<List<T>> callEndpoint(KeycloakConfiguration keycloakConfiguration, String api, Map<String, String> params, long offset, long limit, Class<T> clazz) {
+    private <T> Optional<T> callEndpoint(KeycloakConfiguration keycloakConfiguration, String api, Map<String, String> params, long offset, long limit, JavaType type) {
         lock.lock();
         try {
             refreshToken(keycloakConfiguration);
@@ -113,7 +109,7 @@ public class KeycloakClientService {
                         logger.debug(data);
                     }
                     try {
-                        return objectMapper.readValue(data, objectMapper.getTypeFactory().constructCollectionType(List.class, clazz));
+                        return objectMapper.readValue(data, type);
                     } catch (JsonProcessingException e) {
                         logger.error("Invalid json data: {}", data, e);
                         return null;
