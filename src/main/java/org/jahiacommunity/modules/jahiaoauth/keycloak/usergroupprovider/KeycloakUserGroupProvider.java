@@ -172,8 +172,14 @@ public class KeycloakUserGroupProvider extends BaseUserGroupProvider {
                     .orElse(Collections.emptyList());
         }
 
+        Optional<List<KeycloakGroup>> keycloakGroups;
+        if (searchCriteria.containsKey("*")) {
+            keycloakGroups = keycloakClientService.getGroups(keycloakConfiguration, searchCriteria.getProperty("*").replace("*", ""), offset, limit);
+        } else {
+            keycloakGroups = keycloakClientService.getGroups(keycloakConfiguration, "", offset, limit);
+        }
         List<String> groupIds = new ArrayList<>();
-        keycloakClientService.getGroups(keycloakConfiguration, "", offset, limit).orElse(Collections.emptyList())
+        keycloakGroups.orElse(Collections.emptyList())
                 .forEach(group -> {
                     groupIds.add(group.getId());
                     keycloakCacheManager.cacheGroup(getKey(), getSiteKey(), group);
