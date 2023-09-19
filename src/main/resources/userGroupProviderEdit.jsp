@@ -108,7 +108,7 @@
                         </label>
                     </div>
                     <div class="col-md-8">
-                        <input type="text" name="propValue.clientSecret" class="form-control"
+                        <input type="password" name="propValue.clientSecret" class="form-control"
                                value="${keycloakProperties['clientSecret']}"/>
                     </div>
                 </div>
