@@ -26,10 +26,10 @@ public final class JahiaHelper {
                 }
 
                 jahiaSite = jahiaSitesService.getDefaultSite(systemSession);
-                if (jahiaSite == null) {
-                    return null;
+                if (jahiaSite != null) {
+                    return jahiaSite.getSiteKey();
                 }
-                return jahiaSite.getSiteKey();
+                return JahiaSitesService.SYSTEM_SITE_KEY;
             });
         } catch (RepositoryException e) {
             if (logger.isDebugEnabled()) {
