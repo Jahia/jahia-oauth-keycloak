@@ -27,6 +27,7 @@ import java.util.function.Supplier;
 
 @Component(service = KeycloakCacheManager.class)
 public class KeycloakCacheManager {
+    private static final String MODULE_NAME = "jahia-oauth-keycloak";
     private static final String USER_CACHE = "KeycloakUsersCache";
     private static final String GROUP_CACHE = "KeycloakGroupsCache";
     private static final int TIME_TO_IDLE = 3600;
@@ -107,7 +108,7 @@ public class KeycloakCacheManager {
             properties.put("j:email", keycloakUser.getEmail());
         }
         keycloakUser.setJahiaUser(new JahiaUserImpl(keycloakUser.getId(), keycloakUser.getId(), properties, false, providerKey, siteKey));
-        ModuleClassLoaderAwareCacheEntry cacheEntry = new ModuleClassLoaderAwareCacheEntry(keycloakUser, KeycloakUserGroupProviderConfiguration.KEY);
+        ModuleClassLoaderAwareCacheEntry cacheEntry = new ModuleClassLoaderAwareCacheEntry(keycloakUser, MODULE_NAME);
         userCache.put(new Element(getCacheNameKey(providerKey, siteKey, keycloakUser.getId()), cacheEntry));
     }
 
@@ -130,7 +131,7 @@ public class KeycloakCacheManager {
         Properties properties = new Properties();
         properties.put(Constants.JCR_TITLE, keycloakGroup.getName());
         keycloakGroup.setJahiaGroup(new JahiaGroupImpl(keycloakGroup.getId(), keycloakGroup.getId(), siteKey, properties));
-        ModuleClassLoaderAwareCacheEntry cacheEntry = new ModuleClassLoaderAwareCacheEntry(keycloakGroup, KeycloakUserGroupProviderConfiguration.KEY);
+        ModuleClassLoaderAwareCacheEntry cacheEntry = new ModuleClassLoaderAwareCacheEntry(keycloakGroup, MODULE_NAME);
         groupCache.put(new Element(getCacheNameKey(providerKey, siteKey, keycloakGroup.getId()), cacheEntry));
     }
 
