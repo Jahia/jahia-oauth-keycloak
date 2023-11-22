@@ -66,7 +66,7 @@
     <properties>
         <export-package>org.jahiacommunity.modules.jahiaoauth.keycloak.usergroupprovider</export-package>
         <jahia-depends>default,jahia-authentication,external-provider-users-groups,jahia-oauth</jahia-depends>
-        <jahia.plugin.version>6.1</jahia.plugin.version>
+        <jahia.plugin.version>6.8</jahia.plugin.version>
     </properties>
     <dependencies>
         <dependency>

@@ -2,6 +2,7 @@ package org.jahiacommunity.modules.jahiaoauth.keycloak.connector;
 
 import com.google.common.net.HttpHeaders;
 import org.apache.commons.lang.StringUtils;
+import org.jahia.api.Constants;
 import org.jahia.api.content.JCRTemplate;
 import org.jahia.modules.jahiaauth.service.ConnectorConfig;
 import org.jahia.modules.jahiaauth.service.JahiaAuthConstants;
@@ -9,13 +10,14 @@ import org.jahia.modules.jahiaauth.service.SettingsService;
 import org.jahia.modules.jahiaoauth.service.JahiaOAuthService;
 import org.jahia.params.valves.LoginUrlProvider;
 import org.jahia.params.valves.LogoutUrlProvider;
+import org.jahia.services.sites.JahiaSite;
 import org.jahia.services.sites.JahiaSitesService;
-import org.jahiacommunity.modules.jahiaoauth.keycloak.JahiaHelper;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.jcr.RepositoryException;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.http.HttpServletRequest;
 
@@ -54,14 +56,17 @@ public class KeycloakLoginLogoutUrlProvider implements LoginUrlProvider, LogoutU
         }
         ConnectorConfig connectorConfig = settingsService.getConnectorConfig(siteKey, KeycloakConnector.KEY);
         if (connectorConfig == null) {
+            logger.debug("No connector config for site {}", siteKey);
             // fallback to systemsite
             connectorConfig = settingsService.getConnectorConfig(JahiaSitesService.SYSTEM_SITE_KEY, KeycloakConnector.KEY);
             if (connectorConfig == null) {
+                logger.debug("No connector config for systemsite");
                 // no configuration found
                 return null;
             }
         }
         if (!connectorConfig.getBooleanProperty(JahiaAuthConstants.PROPERTY_IS_ENABLED)) {
+            logger.debug("Connector config is not enabled");
             return null;
         }
         return jahiaOAuthService.getAuthorizationUrl(connectorConfig, sessionId, null);
@@ -72,9 +77,34 @@ public class KeycloakLoginLogoutUrlProvider implements LoginUrlProvider, LogoutU
         return true;
     }
 
+    private static String getSiteKey(HttpServletRequest httpServletRequest, JCRTemplate jcrTemplate, JahiaSitesService jahiaSitesService) {
+        try {
+            return jcrTemplate.doExecuteWithSystemSessionAsUser(null, Constants.EDIT_WORKSPACE, null, systemSession -> {
+                JahiaSite jahiaSite = jahiaSitesService.getSiteByServerName(httpServletRequest.getServerName(), systemSession);
+                if (jahiaSite != null) {
+                    return jahiaSite.getSiteKey();
+                }
+
+                jahiaSite = jahiaSitesService.getDefaultSite(systemSession);
+                if (jahiaSite != null) {
+                    return jahiaSite.getSiteKey();
+                }
+                return JahiaSitesService.SYSTEM_SITE_KEY;
+            });
+        } catch (RepositoryException e) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("", e);
+            }
+        }
+        return null;
+    }
+
     @Override
     public String getLoginUrl(HttpServletRequest httpServletRequest) {
-        String authorizationUrl = getAuthorizationUrl(JahiaHelper.getSiteKey(httpServletRequest, jcrTemplate, jahiaSitesService), httpServletRequest.getRequestedSessionId());
+        String siteKey = getSiteKey(httpServletRequest, jcrTemplate, jahiaSitesService);
+        logger.debug("Get login url for site {}", siteKey);
+        String authorizationUrl = getAuthorizationUrl(siteKey, httpServletRequest.getRequestedSessionId());
+        logger.debug("AuthorizationURL: {}", authorizationUrl);
         if (authorizationUrl == null) {
             return null;
         }
@@ -96,7 +126,7 @@ public class KeycloakLoginLogoutUrlProvider implements LoginUrlProvider, LogoutU
 
     @Override
     public String getLogoutUrl(HttpServletRequest httpServletRequest) {
-        String siteKey = JahiaHelper.getSiteKey(httpServletRequest, jcrTemplate, jahiaSitesService);
+        String siteKey = getSiteKey(httpServletRequest, jcrTemplate, jahiaSitesService);
         if (StringUtils.isBlank(siteKey)) {
             return null;
         }

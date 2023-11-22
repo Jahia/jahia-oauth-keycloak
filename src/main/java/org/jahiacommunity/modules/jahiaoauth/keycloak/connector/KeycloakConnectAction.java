@@ -41,7 +41,7 @@ public class KeycloakConnectAction extends Action {
     public KeycloakConnectAction() {
         setName(NAME);
         setRequireAuthenticatedUser(false);
-        setRequiredMethods(Render.METHOD_GET);
+        setRequiredMethods(Render.METHOD_GET + "," + Render.METHOD_POST);
     }
 
     @Override
